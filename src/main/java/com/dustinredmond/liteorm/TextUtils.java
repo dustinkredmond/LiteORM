@@ -18,7 +18,7 @@ package com.dustinredmond.liteorm;
 
 public class TextUtils {
 
-    public static String camelToUpperSnakeCase(String s) {
+    protected static String camelToUpperSnakeCase(String s) {
         StringBuilder sb = new StringBuilder();
         boolean skipFirst = true;
         for (char c : s.toCharArray()) {

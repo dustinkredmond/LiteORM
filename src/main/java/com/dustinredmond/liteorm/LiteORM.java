@@ -47,8 +47,8 @@ public class LiteORM {
     }
 
     @SuppressWarnings("unused")
-    public void createTableIfNotExists(Class<?> modelClass) {
-        SQLExec.createTableIfNotExists(modelClass);
+    public String createTableIfNotExists(Class<?> modelClass) {
+        return SQLExec.createTableIfNotExists(modelClass);
     }
 
     private static LiteORM instance;

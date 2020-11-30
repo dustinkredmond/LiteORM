@@ -18,10 +18,12 @@ package com.dustinredmond.liteorm;
 
 import java.lang.reflect.Field;
 import java.sql.Connection;
+import java.sql.Date;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -36,9 +38,15 @@ public class SQLExec {
         StringJoiner sjField = new StringJoiner(",");
         StringJoiner sjValue = new StringJoiner(",");
         params.forEach((k,v) -> {
+            if (v == null) {
+                return;
+            }
             sjField.add(k);
             if (v instanceof Number) {
                 sjValue.add(v.toString());
+            } else if (v instanceof Date) {
+                long date = ((Date) v).toInstant().getEpochSecond();
+                sjValue.add(String.format("%s", date));
             } else {
                 sjValue.add("\""+v.toString()+"\"");
             }
@@ -46,12 +54,12 @@ public class SQLExec {
 
         final String sql = String.format("INSERT INTO %s (%s) VALUES (%s);",
             tableName, sjField.toString(), sjValue.toString());
-       try (Connection conn = LiteORM.getInstance().connect();
-           PreparedStatement ps = conn.prepareStatement(sql)) {
-           ps.executeUpdate();
-       } catch (SQLException e) {
-           throw new RuntimeException(e);
-       }
+        try (Connection conn = LiteORM.getInstance().connect();
+            PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.executeUpdate();
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     protected static void update(String tableName, HashMap<String,Object> params) {
@@ -90,7 +98,7 @@ public class SQLExec {
         }
     }
 
-    public static <T> boolean populateObjectValues(T obj, String tableName, HashMap<String, Object> params, long id) {
+    protected static <T> boolean populateObjectValues(T obj, String tableName, HashMap<String, Object> params, long id) {
         if (!params.containsKey("ID")) {
             throw new UnsupportedOperationException("An Entity must contain a property "
                 + "'ID' that uniquely identifies it.");
@@ -120,6 +128,13 @@ public class SQLExec {
             try {
                 field.setAccessible(true);
                 field.set(obj, params.get(sqlFieldName));
+            } catch (IllegalArgumentException e) {
+                // yet another hacky date workaround
+                try {
+                    field.set(obj, Date.from(Instant.ofEpochMilli(Long.parseLong(params.get(sqlFieldName).toString()))));
+                } catch (IllegalAccessException ex) {
+                    throw new RuntimeException(ex);
+                }
             } catch (IllegalAccessException e) {
                 throw new RuntimeException(e);
             } finally {
@@ -130,7 +145,7 @@ public class SQLExec {
     }
 
     @SuppressWarnings({"rawtypes", "unchecked"})
-    public static <T> List<T> findAll(Class<? extends Entity> theClass, String tableName) {
+    protected static <T> List<T> findAll(Class<? extends Entity> theClass, String tableName) {
         final String sql = String.format("SELECT * FROM %s", tableName);
 
         List<T> list = new ArrayList<>();
@@ -144,7 +159,12 @@ public class SQLExec {
                         if (TextUtils.camelToUpperSnakeCase(field.getName())
                             .equals(rsmd.getColumnName(i + 1))) {
                             field.setAccessible(true);
-                            field.set(obj, rs.getObject(rsmd.getColumnName(i+1)));
+                            try {
+                                field.set(obj, rs.getObject(rsmd.getColumnName(i+1)));
+                            } catch (IllegalArgumentException ex) {
+                                // hacky fix for dates
+                                field.set(obj, rs.getDate(rsmd.getColumnName(i+1)));
+                            }
                             field.setAccessible(false);
                         }
                     }
@@ -157,7 +177,7 @@ public class SQLExec {
         return list;
     }
 
-    public static void createTableIfNotExists(Class<?> modelClass) {
+    protected static String createTableIfNotExists(Class<?> modelClass) {
         String tableName = TextUtils.camelToUpperSnakeCase(modelClass.getSimpleName());
         boolean containsId = false;
 
@@ -210,7 +230,7 @@ public class SQLExec {
                     break;
                 case "java.sql.Date":
                 case "java.util.Date":
-                    sj.add(name + " DATE NULL");
+                    sj.add(name + " INTEGER NULL");
                     break;
                 case "java.sql.Time":
                     sj.add(name + " TIME NULL");
@@ -233,6 +253,7 @@ public class SQLExec {
 
         try (Connection conn = LiteORM.getInstance().connect(); PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.executeUpdate();
+            return sql;
         } catch (SQLException e) {
             throw new RuntimeException(e);
         }

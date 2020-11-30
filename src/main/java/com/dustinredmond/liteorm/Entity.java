@@ -17,6 +17,7 @@ package com.dustinredmond.liteorm;
  */
 
 import java.lang.reflect.Field;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 
@@ -24,6 +25,7 @@ import java.util.List;
 public abstract class Entity<T> {
 
     public T findById(long id) {
+        createTableForEntity();
         try {
             //noinspection unchecked
             T obj = (T) getClass().newInstance();
@@ -37,18 +39,22 @@ public abstract class Entity<T> {
     }
 
     public List<T> findAll() {
+        createTableForEntity();
         return SQLExec.findAll(getClass(), getTableName());
     }
 
     public void update() {
+        createTableForEntity();
         SQLExec.update(getTableName(), getProperties());
     }
 
     public void create() {
+        createTableForEntity();
         SQLExec.create(getTableName(), getProperties());
     }
 
     public void delete() {
+        createTableForEntity();
         SQLExec.delete(getTableName(), getProperties());
     }
 
@@ -58,7 +64,16 @@ public abstract class Entity<T> {
             boolean wasAccessible = field.isAccessible();
             field.setAccessible(true);
             try {
-                params.put(TextUtils.camelToUpperSnakeCase(field.getName()), field.get(this));
+                if (field.get(this) == null) {
+                    params.put(TextUtils.camelToUpperSnakeCase(field.getName()), null);
+                    continue;
+                }
+                if (field.getGenericType().getTypeName().equals("java.util.Date")) {
+                    long date = ((Date) field.get(this)).toInstant().toEpochMilli();
+                    params.put(TextUtils.camelToUpperSnakeCase(field.getName()), date);
+                } else {
+                    params.put(TextUtils.camelToUpperSnakeCase(field.getName()), field.get(this));
+                }
             } catch (IllegalAccessException e) {
                 throw new RuntimeException("Unable to access field value.");
             }
@@ -71,7 +86,15 @@ public abstract class Entity<T> {
         if (getClass().isAnonymousClass()) {
             throw new RuntimeException("Class must not be anonymous.");
         } else {
-            return getClass().getSimpleName().toUpperCase();
+            return TextUtils.camelToUpperSnakeCase(getClass().getSimpleName());
+        }
+    }
+
+    private boolean isTableCreated = false;
+    private void createTableForEntity() {
+        if (!isTableCreated) {
+            LiteORM.getInstance().createTableIfNotExists(getClass());
+            isTableCreated = true;
         }
     }
 }
