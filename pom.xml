@@ -6,7 +6,7 @@
 
   <groupId>com.dustinredmond.liteorm</groupId>
   <artifactId>LiteORM</artifactId>
-  <version>0.0.1-SNAPSHOT</version>
+  <version>0.0.2-SNAPSHOT</version>
 
   <name>LiteORM</name>
   <url>http://github.com/dustinkredmond/LiteORM</url>

@@ -38,12 +38,36 @@ public class LiteORM {
         this.dbUrl = String.format("jdbc:sqlite:%s", path);
     }
 
-    protected Connection connect() {
+    protected Connection getConnection() {
         try {
             return DriverManager.getConnection(this.dbUrl);
         } catch (SQLException e) {
             throw new RuntimeException("Unable to get a SQL connection.", e);
         }
+    }
+
+    /**
+     * Attempts to return a Connection object to the SQLite database
+     * managed by LiteORM. Throws {@code java.lang.RuntimeException} if
+     * this isn't possible.
+     * @return {@code java.sql.Connection}
+     */
+    public Connection connectSafe() {
+        try {
+            return DriverManager.getConnection(this.dbUrl);
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    /**
+     * Attempts to return a Connection object to the SQLite database
+     * managed by LiteORM.
+     * @return {@code java.sql.Connection} used by LiteORM
+     * @throws SQLException if unable to get a {@code Connection}
+     */
+    public Connection connect() throws SQLException {
+        return DriverManager.getConnection(this.dbUrl);
     }
 
     @SuppressWarnings("unused")

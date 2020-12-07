@@ -54,8 +54,8 @@ public class SQLExec {
 
         final String sql = String.format("INSERT INTO %s (%s) VALUES (%s);",
             tableName, sjField.toString(), sjValue.toString());
-        try (Connection conn = LiteORM.getInstance().connect();
-            PreparedStatement ps = conn.prepareStatement(sql)) {
+        try (Connection conn = LiteORM.getInstance().getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.executeUpdate();
         } catch (SQLException e) {
             throw new RuntimeException(e);
@@ -67,8 +67,8 @@ public class SQLExec {
         params.forEach((k,v) -> sj.add(" " + k + " = ?"));
         final String sql = String.format("UPDATE %s SET%s WHERE ID = %s",
             tableName, sj.toString(), params.get("ID"));
-        try (Connection conn = LiteORM.getInstance().connect();
-            PreparedStatement ps = conn.prepareStatement(sql)) {
+        try (Connection conn = LiteORM.getInstance().getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
             AtomicInteger i = new AtomicInteger(1);
             params.forEach((k,v) -> {
                 try {
@@ -91,7 +91,7 @@ public class SQLExec {
         final String sql = String.format("DELETE FROM %s WHERE ID = %s",
             tableName,
             params.get("ID"));
-        try (Connection conn = LiteORM.getInstance().connect(); PreparedStatement ps = conn.prepareStatement(sql)) {
+        try (Connection conn = LiteORM.getInstance().getConnection(); PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.executeUpdate();
         } catch (SQLException e) {
             throw new RuntimeException(e);
@@ -107,7 +107,7 @@ public class SQLExec {
         params.keySet().forEach(sj::add);
         final String sql = String.format("SELECT %s FROM %s WHERE ID = %s",sj.toString(), tableName, id);
 
-        try (Connection conn = LiteORM.getInstance().connect(); PreparedStatement ps = conn.prepareStatement(sql)) {
+        try (Connection conn = LiteORM.getInstance().getConnection(); PreparedStatement ps = conn.prepareStatement(sql)) {
             ResultSet rs = ps.executeQuery();
             if (rs.isClosed()) {
                 return false;
@@ -149,7 +149,7 @@ public class SQLExec {
         final String sql = String.format("SELECT * FROM %s", tableName);
 
         List<T> list = new ArrayList<>();
-        try (Connection conn = LiteORM.getInstance().connect(); PreparedStatement ps = conn.prepareStatement(sql)) {
+        try (Connection conn = LiteORM.getInstance().getConnection(); PreparedStatement ps = conn.prepareStatement(sql)) {
             ResultSet rs = ps.executeQuery();
             ResultSetMetaData rsmd = ps.getMetaData();
             while (rs.next()) {
@@ -251,7 +251,7 @@ public class SQLExec {
         final String sql = String.format("CREATE TABLE IF NOT EXISTS %s(\n%s\n);",
             tableName, sj.toString());
 
-        try (Connection conn = LiteORM.getInstance().connect(); PreparedStatement ps = conn.prepareStatement(sql)) {
+        try (Connection conn = LiteORM.getInstance().getConnection(); PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.executeUpdate();
             return sql;
         } catch (SQLException e) {
