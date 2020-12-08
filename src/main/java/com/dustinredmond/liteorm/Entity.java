@@ -17,6 +17,7 @@ package com.dustinredmond.liteorm;
  */
 
 import java.lang.reflect.Field;
+import java.lang.reflect.InvocationTargetException;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
@@ -27,8 +28,14 @@ public abstract class Entity<T> {
     public T findById(long id) {
         createTableForEntity();
         try {
-            //noinspection unchecked
-            T obj = (T) getClass().newInstance();
+            T obj;
+            try {
+                //noinspection unchecked
+                obj = (T) getClass().getDeclaredConstructor().newInstance();
+            } catch (InvocationTargetException | NoSuchMethodException e) {
+                throw new RuntimeException("Unable to instantiate Entity. "
+                    + "Ensure a default no-argument constructor is provided.", e);
+            }
             if (!SQLExec.populateObjectValues(obj, getTableName(), getProperties(), id)) {
                 return null;
             }
@@ -61,6 +68,7 @@ public abstract class Entity<T> {
     private HashMap<String, Object> getProperties() {
         HashMap<String, Object> params = new HashMap<>();
         for (Field field: this.getClass().getDeclaredFields()) {
+            //noinspection deprecation
             boolean wasAccessible = field.isAccessible();
             field.setAccessible(true);
             try {
