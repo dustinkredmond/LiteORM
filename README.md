@@ -14,7 +14,7 @@ LiteORM purposely ignores database relations, foreign keys, constraints, etc. in
 to provide for an extremely tiny library.
 
 If your application only contains a single table, or very few, LiteORM is the way to go.
-Spend more time writing application logic, than writing JDBC methods and SQL.
+Spend more time writing application logic, than writing JDBC method calls and SQL.
 
 **Features**
 - Automatic table creation
@@ -29,7 +29,7 @@ Spend more time writing application logic, than writing JDBC methods and SQL.
 
 First and foremost, for an entity, we need a table.
 
-Let's create a POJO (EmployeeInfo) and extend the LiteORM's Entity class,
+Let's create a POJO (EmployeeInfo) and extend the LiteORM class,
 this will provide us with nifty functionality.
 
 ```java
@@ -40,6 +40,10 @@ public class EmployeeInfo extends LiteORM<EmployeeInfo> {
   private String firstName;
   private String lastName;
   private Date hireDate;
+
+  // LiteORM needs a default no-argument constructor
+  public EmployeeInfo() { super(); }
+
   // getters and setters here
 }
 ```
@@ -56,7 +60,7 @@ CREATE TABLE EMPLOYEE_INFO (
 ```
 
 Now, we have access to all the LiteORM functionality directly from
-the instance methods of our POJO that extended Entity.
+the instance methods of our POJO that extended `LiteORM`.
 
 
 ```java
@@ -84,7 +88,7 @@ public class Test {
 }
 ```
 
-By default the SQLite Database is created as "LiteORM.db" in the 
+By default, the SQLite Database is created as "LiteORM.db" in the 
 current working directory of the application.
 
 This can be overridden by the below:
