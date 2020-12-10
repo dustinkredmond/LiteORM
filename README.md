@@ -33,9 +33,9 @@ Let's create a POJO (EmployeeInfo) and extend the LiteORM's Entity class,
 this will provide us with nifty functionality.
 
 ```java
-import com.dustinredmond.liteorm.Entity;
+import com.dustinredmond.liteorm.LiteORM;
 
-public class EmployeeInfo extends Entity<EmployeeInfo> {
+public class EmployeeInfo extends LiteORM<EmployeeInfo> {
   private long id;
   private String firstName;
   private String lastName;
