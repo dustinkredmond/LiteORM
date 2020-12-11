@@ -20,8 +20,13 @@ import com.dustinredmond.liteorm.LiteORM;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.time.Instant;
 import java.util.Date;
+import java.util.List;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -86,6 +91,35 @@ public class Tests {
 
         assertEquals("Johnson", new Employee().findById(1).getLastName());
         destroy();
+    }
+
+    @Test
+    public void testResultSetMapper() {
+        destroy();
+        new Employee("John", "Smith", new Date()).create();
+        new Employee("Jane", "Doe", new Date()).create();
+
+        final String sql = "SELECT * FROM EMPLOYEE";
+        try (Connection conn = LiteORM.connect();
+            PreparedStatement ps = conn.prepareStatement(sql)) {
+            ResultSet rs = ps.executeQuery();
+            List<Employee> employeeList = new Employee().resultSetToObjects(rs);
+            assertEquals("John", employeeList.get(0).getFirstName());
+            assertEquals("Jane", employeeList.get(1).getFirstName());
+        } catch (SQLException e) {
+            fail(e.getLocalizedMessage());
+        }
+        destroy();
+    }
+
+    @Test
+    public void testPreparedStatementRetrieve() {
+        // TODO
+    }
+
+    @Test
+    public void testStringQueryRetrieve() {
+        // TODO
     }
 
 }

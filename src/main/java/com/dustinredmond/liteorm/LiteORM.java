@@ -99,6 +99,43 @@ public abstract class LiteORM<T> {
         delete(getTableName(), getProperties());
     }
 
+    /**
+     * Attempts to retrieve a list of objects from a {@code ResultSet}
+     * @param rs A SQL {@code ResultSet}
+     * @return A list of objects as contained in the {@code ResultSet}
+     * @throws SQLException If a database access error occurs
+     */
+    public List<T> resultSetToObjects(ResultSet rs) throws SQLException {
+        return resultSetToObjects(rs, getClass());
+    }
+
+
+    /**
+     * Attempts to retrieve a list of objects from a {@code PreparedStatement}
+     * @param ps A SQL {@code PreparedStatement}
+     * @return A list of objects contained via querying the {@code PreparedStatement}
+     * @throws SQLException If a database access error occurs
+     */
+    public List<T> preparedStatementToObjects(PreparedStatement ps) throws SQLException {
+        try (Connection conn = connect(); ResultSet rs = ps.executeQuery()) {
+            return resultSetToObjects(rs);
+        } finally {
+            ps.close();
+        }
+    }
+
+    /**
+     * Attempts to retrieve a list of objects from a SQL query as a String
+     * @param query A SQL query as a String
+     * @return A list of objects returned by the query.
+     * @throws SQLException If a database access error occurs
+     */
+    public List<T> queryToObjects(String query) throws SQLException {
+        try (Connection conn = connect(); PreparedStatement ps = conn.prepareStatement(query)) {
+            return preparedStatementToObjects(ps);
+        }
+    }
+
     private HashMap<String, Object> getProperties() {
         HashMap<String, Object> params = new HashMap<>();
         for (Field field: this.getClass().getDeclaredFields()) {
@@ -396,6 +433,37 @@ public abstract class LiteORM<T> {
         }
     }
 
+    @SuppressWarnings("rawtypes")
+    private List<T> resultSetToObjects(ResultSet rs, Class<? extends LiteORM> theClass) throws SQLException {
+        List<T> objects = new ArrayList<>();
+        ResultSetMetaData md = rs.getMetaData();
+        while (rs.next()) {
+            try {
+                //noinspection unchecked
+                T obj = (T) theClass.getDeclaredConstructor().newInstance();
+                for (int i = 1; i < md.getColumnCount()+1; i++) {
+                    String colName = md.getColumnName(i);
+                    for (Field field : obj.getClass().getDeclaredFields()) {
+                        String fieldName = camelToUpperSnakeCase(field.getName());
+                        if (colName.equals(fieldName)) {
+                            field.setAccessible(true);
+                            try {
+                                field.set(obj, rs.getObject(i));
+                            } catch (IllegalArgumentException ex) {
+                                field.set(obj, rs.getDate(md.getColumnName(i)));
+                            }
+                        }
+                    }
+                }
+                objects.add(obj);
+            } catch (NoSuchMethodException | IllegalAccessException
+                | InstantiationException | InvocationTargetException e) {
+                throw new RuntimeException(e);
+            }
+        }
+        return objects;
+    }
+
     /**
      * Attempts to return a Connection object to the SQLite database
      * managed by LiteORM.
@@ -417,10 +485,15 @@ public abstract class LiteORM<T> {
         LiteORM.dbUrl = String.format("jdbc:sqlite:%s", path);
     }
 
-    private static String dbUrl = "jdbc:sqlite:LiteORM.db";
-    private static boolean printSql;
-
+    /**
+     * If set to true, prints all SQL executed to System.out
+     * @param enabled Whether or not to enable printing of SQL
+     */
     public static void setSqlPrinting(boolean enabled) {
         LiteORM.printSql = enabled;
     }
+
+    private static String dbUrl = "jdbc:sqlite:LiteORM.db";
+    private static boolean printSql;
+
 }
