@@ -105,8 +105,8 @@ public abstract class LiteORM<T> {
      * @return A list of objects as contained in the {@code ResultSet}
      * @throws SQLException If a database access error occurs
      */
-    public List<T> resultSetToObjects(ResultSet rs) throws SQLException {
-        return resultSetToObjects(rs, getClass());
+    public List<T> toObjects(ResultSet rs) throws SQLException {
+        return toObjects(rs, getClass());
     }
 
 
@@ -116,9 +116,9 @@ public abstract class LiteORM<T> {
      * @return A list of objects contained via querying the {@code PreparedStatement}
      * @throws SQLException If a database access error occurs
      */
-    public List<T> preparedStatementToObjects(PreparedStatement ps) throws SQLException {
+    public List<T> toObjects(PreparedStatement ps) throws SQLException {
         try (Connection conn = connect(); ResultSet rs = ps.executeQuery()) {
-            return resultSetToObjects(rs);
+            return toObjects(rs);
         } finally {
             ps.close();
         }
@@ -130,9 +130,9 @@ public abstract class LiteORM<T> {
      * @return A list of objects returned by the query.
      * @throws SQLException If a database access error occurs
      */
-    public List<T> queryToObjects(String query) throws SQLException {
+    public List<T> toObjects(String query) throws SQLException {
         try (Connection conn = connect(); PreparedStatement ps = conn.prepareStatement(query)) {
-            return preparedStatementToObjects(ps);
+            return toObjects(ps);
         }
     }
 
@@ -434,7 +434,7 @@ public abstract class LiteORM<T> {
     }
 
     @SuppressWarnings("rawtypes")
-    private List<T> resultSetToObjects(ResultSet rs, Class<? extends LiteORM> theClass) throws SQLException {
+    private List<T> toObjects(ResultSet rs, Class<? extends LiteORM> theClass) throws SQLException {
         List<T> objects = new ArrayList<>();
         ResultSetMetaData md = rs.getMetaData();
         while (rs.next()) {

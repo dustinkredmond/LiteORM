@@ -103,7 +103,7 @@ public class Tests {
         try (Connection conn = LiteORM.connect();
             PreparedStatement ps = conn.prepareStatement(sql)) {
             ResultSet rs = ps.executeQuery();
-            List<Employee> employeeList = new Employee().resultSetToObjects(rs);
+            List<Employee> employeeList = new Employee().toObjects(rs);
             assertEquals("John", employeeList.get(0).getFirstName());
             assertEquals("Jane", employeeList.get(1).getFirstName());
         } catch (SQLException e) {
@@ -114,12 +114,31 @@ public class Tests {
 
     @Test
     public void testPreparedStatementRetrieve() {
-        // TODO
+        destroy();
+        new Employee("John", "Smith", new Date()).create();
+        final String sql = "SELECT * FROM EMPLOYEE";
+        try (Connection conn = LiteORM.connect(); PreparedStatement ps = conn.prepareStatement(sql)) {
+            List<Employee> employees = new Employee().toObjects(ps);
+            assertEquals("John", employees.get(0).getFirstName());
+        } catch (SQLException e) {
+            fail(e.getLocalizedMessage());
+        }
+        destroy();
     }
 
     @Test
     public void testStringQueryRetrieve() {
-        // TODO
+        destroy();
+        new Employee("John", "Smith", new Date()).create();
+        final String sql = "SELECT * FROM EMPLOYEE WHERE FIRST_NAME = 'John'";
+
+        try {
+            List<Employee> employees = new Employee().toObjects(sql);
+            assertEquals("John", employees.get(0).getFirstName());
+        } catch (SQLException ex) {
+            fail(ex.getLocalizedMessage());
+        }
+        destroy();
     }
 
 }
