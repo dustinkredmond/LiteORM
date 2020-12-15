@@ -19,6 +19,7 @@ package com.dustinredmond.liteormtest;
 import com.dustinredmond.liteorm.LiteORM;
 import java.io.IOException;
 import java.nio.file.Files;
+import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -36,13 +37,13 @@ public class Tests {
 
     @Before
     public void setup() {
-        LiteORM.setDatabasePath("LiteORM-tests.db");
+        LiteORM.setDatabasePath(TEST_DB_PATH.toString());
     }
 
     @After
     public void destroy() {
         try {
-            Files.deleteIfExists(Paths.get("LiteORM-tests.db"));
+            Files.deleteIfExists(TEST_DB_PATH);
         } catch (IOException e) {
             fail(e.getLocalizedMessage());
         }
@@ -140,5 +141,7 @@ public class Tests {
         }
         destroy();
     }
+
+    private static final Path TEST_DB_PATH = Paths.get("LiteORM-tests.db");
 
 }
