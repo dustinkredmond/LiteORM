@@ -244,7 +244,7 @@ public abstract class LiteORM<T> {
 
     private static void delete(String tableName, HashMap<String, Object> params) {
         if (!params.containsKey("ID")) {
-            throw new UnsupportedOperationException("An LiteORM must contain a property "
+            throw new UnsupportedOperationException("A LiteORM entity must contain a property "
                 + "'ID' that uniquely identifies it.");
         }
         final String sql = String.format("DELETE FROM %s WHERE ID = %s",
@@ -262,7 +262,7 @@ public abstract class LiteORM<T> {
 
     private static <T> boolean populateObjectValues(T obj, String tableName, HashMap<String, Object> params, long id) {
         if (!params.containsKey("ID")) {
-            throw new UnsupportedOperationException("An LiteORM must contain a property "
+            throw new UnsupportedOperationException("A LiteORM entity must contain a property "
                 + "'ID' that uniquely identifies it.");
         }
         StringJoiner sj = new StringJoiner(", ");
