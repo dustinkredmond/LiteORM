@@ -23,6 +23,7 @@ Spend more time writing application logic, than writing JDBC method calls and SQ
   - update()
   - delete()
   - findAll(), findById() etc.
+- Mapping of ResultSets/PreparedStatements/queries to Objects
 
 ---
 ### What does LiteORM do?
@@ -65,6 +66,7 @@ the instance methods of our POJO that extended `LiteORM`.
 
 ```java
 import com.dustinredmond.liteorm.EmployeeInfo;
+import java.sql.PreparedStatement;
 import java.util.Date;
 
 public class Test {
@@ -83,6 +85,13 @@ public class Test {
         e.update(); // updates already existing entity 
 
         e.delete(); // removes DB entry
+
+        PreparedStatement ps = ... // create some prepared statement
+        // get objects based on prepared statement
+        List<EmployeeInfo> employees = e.toObjects(ps);
+        
+        // or based on query as a String value
+        List<EmployeeInfo> employees2 = e.toObjects("SELECT * FROM EMPLOYEE WHERE ...");
     }
 
 }
@@ -109,4 +118,8 @@ Objects other than built-in Java types.
 
 The way that the library is written, if you attempt to persist anything
 other than a built-in Java type, it will be persisted as a BLOB type
-in SQLite.
+in SQLite. This is probably not what you want.
+
+Mainly, I use this library myself to write application skeletons/wireframes 
+with a bit of functionality, for serious a production scenario, I would 
+stick with Hibernate, native JDBC, or a more comprehensive ORM library.
