@@ -358,7 +358,7 @@ public abstract class LiteORM<T> {
         StringJoiner sj = new StringJoiner(",\n");
         sj.add("ID INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT");
         for (Field declaredField : modelClass.getDeclaredFields()) {
-            if (declaredField.getName().toUpperCase().equals("ID")) {
+            if (declaredField.getName().equalsIgnoreCase("ID")) {
                 containsId = true;
                 continue;
             }
