@@ -121,5 +121,5 @@ other than a built-in Java type, it will be persisted as a BLOB type
 in SQLite. This is probably not what you want.
 
 Mainly, I use this library myself to write application skeletons/wireframes 
-with a bit of functionality, for serious a production scenario, I would 
+with a bit of functionality, for a serious production scenario, I would 
 stick with Hibernate, native JDBC, or a more comprehensive ORM library.
